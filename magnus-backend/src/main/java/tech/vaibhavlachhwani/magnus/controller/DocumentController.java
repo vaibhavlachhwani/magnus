@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import tech.vaibhavlachhwani.magnus.crypto.HashService;
+import tech.vaibhavlachhwani.magnus.dto.DocumentDTO;
 import tech.vaibhavlachhwani.magnus.model.Document;
 import tech.vaibhavlachhwani.magnus.service.DocumentService;
 import tech.vaibhavlachhwani.magnus.service.FileStorageService;
@@ -28,7 +29,7 @@ public class DocumentController {
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<?> uploadDocument(
+    public ResponseEntity<DocumentDTO> uploadDocument(
             @RequestParam("file") MultipartFile file,
             @RequestParam("studentId") UUID studentId
     ) throws IOException {
@@ -44,6 +45,16 @@ public class DocumentController {
                 studentId
         );
 
-        return ResponseEntity.ok(doc);
+        return ResponseEntity.ok(convertToDTO(doc));
+    }
+
+    private DocumentDTO convertToDTO(Document doc) {
+        return DocumentDTO.builder()
+                .id(doc.getId())
+                .fileName(doc.getFileName())
+                .hashValue(doc.getHashValue())
+                .issueDate(doc.getIssueDate())
+                .studentId(doc.getStudent() != null ? doc.getStudent().getId() : null)
+                .build();
     }
 }
