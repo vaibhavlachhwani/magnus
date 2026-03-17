@@ -31,4 +31,8 @@ public class FileStorageService {
         Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
         return targetLocation.toString();
     }
+
+    public byte[] readFile(Path path) throws IOException {
+        return Files.readAllBytes(path);
+    }
 }
