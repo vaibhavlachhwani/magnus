@@ -1,0 +1,103 @@
+Magnus API Specification for Frontend Development
+
+
+  Base URL: http://localhost:8080
+  Content-Type: application/json (unless specified otherwise)
+
+  1. Core Entities (Data Models)
+
+  StudentDTO
+  Used for registering and listing students.
+   1 {
+   2   "id": "UUID",
+   3   "name": "String (Required, @NotBlank)"
+   4 }
+
+
+  DocumentDTO
+  Returned after a successful document upload or when fetching by ID.
+
+
+   1 {
+   2   "id": "UUID",
+   3   "fileName": "String",
+   4   "hashValue": "String (HMAC-SHA512)",
+   5   "issueDate": "ISO-8601 DateTime",
+   6   "studentId": "UUID"
+   7 }
+
+  VerificationResultDTO
+  Returned when checking a document's authenticity via file upload.
+
+
+   1 {
+   2   "authentic": "Boolean",
+   3   "status": "String (e.g., 'AUTHENTIC' or 'NOT AUTHENTIC')",
+   4   "documentId": "UUID (Optional, present if authentic)",
+   5   "message": "String (Detailed feedback)"
+   6 }
+
+  ---
+
+  2. API Endpoints
+
+
+  A. Health Check
+   * Endpoint: GET /health
+   * Description: Checks if the backend service is running.
+   * Response: 200 OK with "Systems running" (Plain Text).
+
+
+  B. Student Management
+   * Register Student
+       * Endpoint: POST /students/register
+       * Payload: { "name": "Student Name" }
+       * Response: 200 OK with StudentDTO.
+       * Errors: 400 Bad Request if name is empty.
+
+
+   * List All Students
+       * Endpoint: GET /students
+       * Response: 200 OK with Array<StudentDTO>.
+
+
+  C. Document Management
+   * Upload Document
+       * Endpoint: POST /documents/upload
+       * Content-Type: multipart/form-data
+       * Parameters:
+           * file: (File Binary)
+           * studentId: (UUID String)
+       * Response: 200 OK with DocumentDTO.
+       * Logic: The backend generates a unique HMAC-SHA512 hash for the file and stores it.
+
+
+  D. Verification Services
+   * Verify Document by File (HMAC Check)
+       * Endpoint: POST /verify
+       * Content-Type: multipart/form-data
+       * Parameters:
+           * file: (File Binary)
+       * Response:
+           * 200 OK with VerificationResultDTO (if found/authentic).
+           * 404 Not Found with VerificationResultDTO (if forged/not found).
+
+
+   * Get Document Details by ID
+       * Endpoint: GET /verify/{id}
+       * Path Variable: id (UUID)
+       * Response:
+           * 200 OK with DocumentDTO.
+           * 404 Not Found with VerificationResultDTO (if ID doesn't exist).
+
+  ---
+
+
+  3. Implementation Requirements for Frontend
+   1. File Handling: The frontend must support multipart/form-data for the /documents/upload and /verify (POST) endpoints.
+   2. State Management: When a user selects a student from the list, the UI should store that studentId to use during the document upload process.
+   3. Verification UI:
+       * Provide a "Verify by Upload" feature where users can drag and drop a file to check its authenticity.
+       * Provide a "Verify by ID" feature where users can enter a UUID to see the metadata (issue date, owner, etc.).
+   4. Error Handling: Handle 404 responses gracefully for verification failures and 400 for validation errors (e.g., missing name).
+
